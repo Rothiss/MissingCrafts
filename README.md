@@ -7,7 +7,7 @@ A World of Warcraft addon for Vanilla WoW (1.12.1) and Turtle WoW that helps pla
 - **Integrated Profession Window**: Attachable window that appears next to profession frames showing missing recipes
 - **Cross-Character Recipe Tracking**: Monitor recipe knowledge across all characters on your account
 - **Enhanced Item Tooltips**: Shows which characters can learn recipes from items and their current learning status
-- **Advanced Filtering**: Filter missing recipes by profession and character with intuitive dropdown menus
+- **Advanced Filtering**: Filter missing recipes by profession or character with intuitive dropdown menus and a free-text search field
 - **Recipe Source Information**: Displays how to obtain each missing recipe (Vendor, Quest, Drop, etc.)
 - **Multiple Profession Frame Support**: Works seamlessly with default WoW frames and popular profession addons
 - **All Vanilla Crafting Professions**: Supports all vanilla crafting professions
@@ -19,7 +19,7 @@ A World of Warcraft addon for Vanilla WoW (1.12.1) and Turtle WoW that helps pla
 1. Open any crafting profession window
 2. Click the recipe button in the upper right corner of the profession frame
 3. The MissingCrafts window will open, showing all recipes you haven't learned yet
-4. Use the dropdown filters to narrow down recipes by profession or character
+4. Use the dropdown filters and search field to narrow down recipes by profession or character
 5. Hover over recipes to see their source information
 
 ## Supported Profession Windows
@@ -29,6 +29,7 @@ A World of Warcraft addon for Vanilla WoW (1.12.1) and Turtle WoW that helps pla
 - [**AdvancedTradeSkillWindow**](https://github.com/laytya/AdvancedTradeSkillWindow-vanilla)
 - [**AdvancedTradeSkillWindow2**](https://github.com/Shellyoung/AdvancedTradeSkillWindow2)
 - [**Artisan**](https://github.com/Otari98/Artisan)
+- [**pfUI**](https://github.com/shagu/pfUI)
 
 ## Comparison with [MissingTradeSkillsList](https://github.com/refaim/MissingTradeSkillsList)
 
