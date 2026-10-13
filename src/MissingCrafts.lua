@@ -52,11 +52,11 @@ end
 ---@param link string|nil
 ---@return string
 local function itemIdFromLink(link)
-    if type(link) ~= "string" then
+    local id = parseItemId(link)
+    if id == nil then
         return "MISSING"
     end
-    local _, _, id = strfind(link, "item:(%d+)")
-    return id or "MISSING"
+    return tostring(id)
 end
 
 local function dumpTradeSkillWindow()
@@ -141,7 +141,8 @@ local function dumpStored(database)
     end
 
     local known = survival.knownLocalizedSkillNames
-    debugPrint(format("DB Survival rank=%s known=%d", tostring(survival.rank), getn(known)))
+    debugPrint(format("DB Survival rank=%s known=%d knownResultIds=%d",
+        tostring(survival.rank), getn(known), getn(survival.knownResultIds or {})))
     for _, skillName in ipairs(known) do
         debugPrint("  stored: " .. tostring(skillName))
     end
@@ -173,6 +174,21 @@ local function crossCheck(database, repositories)
         if craftSet[skillName] == nil then
             debugPrint("  stored but NOT in Survival.lua: " .. tostring(skillName))
         end
+    end
+
+    local playerName, _ = UnitName("player")
+    local character = repositories.characterRepository:Find(playerName)
+    if character ~= nil then
+        local knownCount = 0
+        local missingCount = 0
+        for _, craft in ipairs(crafts) do
+            if character:Knows(craft) then
+                knownCount = knownCount + 1
+            else
+                missingCount = missingCount + 1
+            end
+        end
+        debugPrint(format("Filter result for %s: known=%d missing=%d", tostring(playerName), knownCount, missingCount))
     end
 end
 
@@ -218,10 +234,15 @@ function addon:OnEnable()
 
     LibCraftingProfessions:RegisterEvent("LCP_SKILLS_UPDATE", function(profession, skills)
         local skillNames = {}
+        local resultIds = {}
         for _, skill in ipairs(skills) do
             tinsert(skillNames, skill.localized_name)
+            local resultId = parseItemId(skill.item_link)
+            if resultId ~= nil then
+                tinsert(resultIds, resultId)
+            end
         end
-        self.database:SaveCurrentPlayerSkills(profession.localized_name, profession.cur_rank, skillNames)
+        self.database:SaveCurrentPlayerSkills(profession.localized_name, profession.cur_rank, skillNames, resultIds)
 
         local playerProfessions = LibCraftingProfessions:GetPlayerProfessions()
         if playerProfessions ~= nil then

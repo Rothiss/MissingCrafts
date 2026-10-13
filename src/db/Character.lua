@@ -4,6 +4,7 @@ setfenv(1, MissingCrafts)
 ---@field localizedName string
 ---@field rank number
 ---@field knownLocalizedSkillNamesSet table<string, boolean>
+---@field knownResultIdsSet table<number, boolean>
 
 ---@class Character
 ---@field name string
@@ -20,13 +21,20 @@ function Character:Create(dbCharacter)
         ---@type table<string, boolean>
         local skillSet = {}
         for _, skillName in ipairs(profession.knownLocalizedSkillNames) do
-            skillSet[skillName] = true
+            skillSet[normalizeName(skillName)] = true
+        end
+
+        ---@type table<number, boolean>
+        local resultIdSet = {}
+        for _, resultId in ipairs(profession.knownResultIds or {}) do
+            resultIdSet[resultId] = true
         end
 
         nameToProfession[professionName] = {
             localizedName = professionName,
             rank = profession.rank,
             knownLocalizedSkillNamesSet = skillSet,
+            knownResultIdsSet = resultIdSet,
         }
     end
 
@@ -45,4 +53,19 @@ function Character:GetProfessionRank(localizedName)
         return 0
     end
     return profession.rank
+end
+
+---@param craft Craft
+---@return boolean
+function Character:Knows(craft)
+    local profession = self.professionLocalizedNameToProfession[craft.localizedProfessionName]
+    if profession == nil then
+        return false
+    end
+
+    if craft.resultId ~= nil and profession.knownResultIdsSet[craft.resultId] == true then
+        return true
+    end
+
+    return profession.knownLocalizedSkillNamesSet[normalizeName(craft.localizedName)] == true
 end

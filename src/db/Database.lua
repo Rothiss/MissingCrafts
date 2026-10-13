@@ -8,6 +8,7 @@ Database = {}
 ---@shape DatabaseProfession
 ---@field rank number
 ---@field knownLocalizedSkillNames string[]
+---@field knownResultIds number[]|nil
 
 ---@shape DatabaseCharacter
 ---@field realm string
@@ -66,11 +67,13 @@ end
 ---@param localizedProfessionName string
 ---@param professionRank number
 ---@param localizedSkillNames string[]
-function Database:SaveCurrentPlayerSkills(localizedProfessionName, professionRank, localizedSkillNames)
+---@param knownResultIds number[]|nil
+function Database:SaveCurrentPlayerSkills(localizedProfessionName, professionRank, localizedSkillNames, knownResultIds)
     local player = self:_SavePlayer()
     player.professionsByLocalizedName[localizedProfessionName] = {
         rank = professionRank,
-        knownLocalizedSkillNames = localizedSkillNames
+        knownLocalizedSkillNames = localizedSkillNames,
+        knownResultIds = knownResultIds or {}
     }
     self._revision = self._revision + 1
 end

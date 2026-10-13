@@ -41,3 +41,24 @@ function tpop(t, key)
     t[key] = nil
     return value
 end
+
+---@param name string
+---@return string
+function normalizeName(name)
+    local normalized = string.gsub(name, "\226\128\153", "'")
+    normalized = string.gsub(normalized, "^%s*(.-)%s*$", "%1")
+    return normalized
+end
+
+---@param link string|nil
+---@return number|nil
+function parseItemId(link)
+    if type(link) ~= "string" then
+        return nil
+    end
+    local _, _, id = strfind(link, "item:(%d+)")
+    if id == nil then
+        return nil
+    end
+    return tonumber(id)
+end
