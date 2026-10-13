@@ -63,6 +63,18 @@ local function registerDiagnosticCommand(database, repositories)
         local realm = GetRealmName()
         debugPrint(format("player=%s realm=%s locale=%s", tostring(playerName), tostring(realm), tostring(GetLocale())))
 
+        local saved = {}
+        for realmName, nameToCharacterForRealm in pairs(database._db.global.realmToNameToCharacter) do
+            for charName, character in pairs(nameToCharacterForRealm) do
+                local profCount = 0
+                for _ in pairs(character.professionsByLocalizedName) do
+                    profCount = profCount + 1
+                end
+                tinsert(saved, format("%s/%s(prof=%d)", tostring(realmName), tostring(charName), profCount))
+            end
+        end
+        debugPrint("saved: " .. joinList(saved))
+
         local nameToCharacter = database._db.global.realmToNameToCharacter[realm] or {}
         local player = nameToCharacter[playerName]
         local survival = player and player.professionsByLocalizedName["Survival"]

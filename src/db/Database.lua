@@ -54,10 +54,11 @@ end
 
 ---@return DatabaseCharacter[]
 function Database:GetCharacters()
+    local nameToCharacter = self._db.global.realmToNameToCharacter[GetRealmName()] or {}
     ---@type DatabaseCharacter[]
     local characters = {}
-    for _, nameToCharacter in pairs(self._db.global.realmToNameToCharacter) do
-        for _, character in pairs(nameToCharacter) do
+    for _, character in pairs(nameToCharacter) do
+        if character.name ~= "" then
             tinsert(characters, character)
         end
     end
