@@ -181,7 +181,8 @@ function CraftRepository:FindMissing(characterName, localizedProfessionName, sea
     ---@type Craft[]
     local crafts = {}
     for _, craft in ipairs(self:GetCraftsByProfession(localizedProfessionName)) do
-        if character == nil or not character:Knows(craft) then
+        local resultId = (craft.result ~= nil) and craft.result.id or nil
+        if character == nil or not character:Knows(localizedProfessionName, craft.localized_spell_name, resultId) then
             local match = false
             if lcSearchQuery ~= "" then
                 local lcSpellName = strlower(craft.localized_spell_name)

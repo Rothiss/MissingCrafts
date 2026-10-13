@@ -133,7 +133,7 @@ end
 ---@param craft Craft
 ---@return RecipeStatus
 function TooltipEnhancer:GetRecipeStatus(character, craft)
-    if character:Knows(craft) then
+    if character:Knows(craft.localizedProfessionName, craft.localizedName, craft.resultId) then
         return RecipeStatus.IsLearned
     end
 

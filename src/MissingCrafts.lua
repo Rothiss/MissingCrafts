@@ -46,163 +46,54 @@ local addon = --[[---@type MissingCrafts]] AceAddon:NewAddon("MissingCrafts")
 
 ---@param text string
 local function debugPrint(text)
-    DEFAULT_CHAT_FRAME:AddMessage("|cff40bf40MissingCrafts debug|r: " .. tostring(text))
-end
-
----@param link string|nil
----@return string
-local function itemIdFromLink(link)
-    local id = parseItemId(link)
-    if id == nil then
-        return "MISSING"
-    end
-    return tostring(id)
-end
-
-local function dumpTradeSkillWindow()
-    local name, curRank, maxRank = GetTradeSkillLine()
-    debugPrint(format("TradeSkillLine = %s (rank %s/%s)", tostring(name), tostring(curRank), tostring(maxRank)))
-    local count = GetNumTradeSkills() or 0
-    debugPrint(format("GetNumTradeSkills() = %d", count))
-    for i = 1, count do
-        local skillName, skillType, numAvailable = GetTradeSkillInfo(i)
-        debugPrint(format("  [%d] name=%s type=%s numAvailable=%s item=%s",
-            i, tostring(skillName), tostring(skillType), tostring(numAvailable), itemIdFromLink(GetTradeSkillItemLink(i))))
-    end
-end
-
-local function dumpCraftWindow()
-    local name, curRank, maxRank = GetCraftDisplaySkillLine()
-    debugPrint(format("CraftDisplaySkillLine = %s (rank %s/%s)", tostring(name), tostring(curRank), tostring(maxRank)))
-    local count = GetNumCrafts() or 0
-    debugPrint(format("GetNumCrafts() = %d", count))
-    for i = 1, count do
-        local skillName, _, skillType, numAvailable = GetCraftInfo(i)
-        debugPrint(format("  [%d] name=%s type=%s numAvailable=%s item=%s",
-            i, tostring(skillName), tostring(skillType), tostring(numAvailable), itemIdFromLink(GetCraftItemLink(i))))
-    end
-end
-
-local function dumpLcp()
-    local skills = LibCraftingProfessions:GetPlayerProfessionSkills("Survival")
-    if skills == nil then
-        debugPrint("LCP GetPlayerProfessionSkills('Survival') = nil")
-    else
-        debugPrint(format("LCP GetPlayerProfessionSkills('Survival') = %d entries", getn(skills)))
-        for _, skill in ipairs(skills) do
-            debugPrint(format("  known: %s | item=%s", tostring(skill.localized_name), itemIdFromLink(skill.item_link)))
-        end
-    end
-
-    local professions = LibCraftingProfessions:GetPlayerProfessions()
-    if professions == nil then
-        debugPrint("LCP GetPlayerProfessions() = nil")
-    else
-        for _, profession in ipairs(professions) do
-            debugPrint(format("  profession: english=%s localized=%s rank=%s",
-                tostring(profession.english_name), tostring(profession.localized_name), tostring(profession.cur_rank)))
-        end
-    end
-
-    for _, supported in ipairs(LibCraftingProfessions:GetSupportedProfessions()) do
-        if supported.english_name == "Survival" then
-            debugPrint(format("LCP supported Survival localized_name = %s", tostring(supported.localized_name)))
-        end
-    end
-end
-
----@param database Database
----@return DatabaseCharacter|nil
-local function findCurrentDbCharacter(database)
-    local realm = GetRealmName()
-    local name, _ = UnitName("player")
-    return database._db.global.realmToNameToCharacter[realm][name]
-end
-
----@param database Database
-local function dumpStored(database)
-    local player = findCurrentDbCharacter(database)
-    if player == nil then
-        debugPrint("DB: no player entry")
-        return
-    end
-
-    local professionNames = {}
-    for professionName, _ in pairs(player.professionsByLocalizedName) do
-        tinsert(professionNames, professionName)
-    end
-    table.sort(professionNames)
-    debugPrint("DB professions: " .. table.concat(professionNames, ", "))
-
-    local survival = player.professionsByLocalizedName["Survival"]
-    if survival == nil then
-        debugPrint("DB: no 'Survival' entry")
-        return
-    end
-
-    local known = survival.knownLocalizedSkillNames
-    debugPrint(format("DB Survival rank=%s known=%d knownResultIds=%d",
-        tostring(survival.rank), getn(known), getn(survival.knownResultIds or {})))
-    for _, skillName in ipairs(known) do
-        debugPrint("  stored: " .. tostring(skillName))
-    end
-end
-
----@param database Database
----@param repositories Repositories
-local function crossCheck(database, repositories)
-    local player = findCurrentDbCharacter(database)
-    local survival = player and player.professionsByLocalizedName["Survival"]
-    if survival == nil then
-        debugPrint("Cross-check skipped (no stored Survival entry)")
-        return
-    end
-
-    local storedSet = {}
-    for _, skillName in ipairs(survival.knownLocalizedSkillNames) do
-        storedSet[skillName] = true
-    end
-
-    local crafts = repositories.craftRepository:GetCraftsByProfession("Survival")
-    local craftSet = {}
-    for _, craft in ipairs(crafts) do
-        craftSet[craft.localized_spell_name] = true
-    end
-
-    debugPrint(format("Cross-check: stored=%d crafts=%d", getn(survival.knownLocalizedSkillNames), getn(crafts)))
-    for skillName, _ in pairs(storedSet) do
-        if craftSet[skillName] == nil then
-            debugPrint("  stored but NOT in Survival.lua: " .. tostring(skillName))
-        end
-    end
-
-    local playerName, _ = UnitName("player")
-    local character = repositories.characterRepository:Find(playerName)
-    if character ~= nil then
-        local knownCount = 0
-        local missingCount = 0
-        for _, craft in ipairs(crafts) do
-            if character:Knows(craft) then
-                knownCount = knownCount + 1
-            else
-                missingCount = missingCount + 1
-            end
-        end
-        debugPrint(format("Filter result for %s: known=%d missing=%d", tostring(playerName), knownCount, missingCount))
-    end
+    DEFAULT_CHAT_FRAME:AddMessage("MC: " .. tostring(text))
 end
 
 ---@param database Database
 ---@param repositories Repositories
 local function registerDiagnosticCommand(database, repositories)
-    ---@param msg string|nil
-    local function run(msg)
-        debugPrint(format("player=%s realm=%s locale=%s", tostring((UnitName("player"))), tostring(GetRealmName()), tostring(GetLocale())))
-        dumpTradeSkillWindow()
-        dumpCraftWindow()
-        dumpLcp()
-        dumpStored(database)
-        crossCheck(database, repositories)
+    ---@param list string[]
+    ---@return string
+    local function joinList(list)
+        return table.concat(list, ", ")
+    end
+
+    local function run()
+        local playerName, _ = UnitName("player")
+        local realm = GetRealmName()
+        debugPrint(format("player=%s realm=%s locale=%s", tostring(playerName), tostring(realm), tostring(GetLocale())))
+
+        local nameToCharacter = database._db.global.realmToNameToCharacter[realm] or {}
+        local player = nameToCharacter[playerName]
+        local survival = player and player.professionsByLocalizedName["Survival"]
+        if survival == nil then
+            debugPrint("db: no Survival entry")
+        else
+            debugPrint(format("db: rank=%s names=%d ids=%d",
+                tostring(survival.rank), getn(survival.knownLocalizedSkillNames), getn(survival.knownResultIds or {})))
+        end
+
+        local skills = LibCraftingProfessions:GetPlayerProfessionSkills("Survival")
+        debugPrint(format("lcp: skills=%s", skills == nil and "nil" or tostring(getn(skills))))
+
+        local crafts = repositories.craftRepository:GetCraftsByProfession("Survival")
+        local missing = repositories.craftRepository:FindMissing(playerName, "Survival", "")
+        debugPrint(format("crafts=%d filterKnown=%d filterMissing=%d",
+            getn(crafts), getn(crafts) - getn(missing), getn(missing)))
+
+        if survival ~= nil then
+            local craftSet = {}
+            for _, craft in ipairs(crafts) do
+                craftSet[normalizeName(craft.localized_spell_name)] = true
+            end
+            local extras = {}
+            for _, skillName in ipairs(survival.knownLocalizedSkillNames) do
+                if craftSet[normalizeName(skillName)] == nil then
+                    tinsert(extras, skillName)
+                end
+            end
+            debugPrint(format("storedButNotInData(%d): %s", getn(extras), joinList(extras)))
+        end
     end
 
     local globalScope = MissingCrafts._G
