@@ -4,6 +4,8 @@ setfenv(1, MissingCrafts)
 ---@field _db Database
 ---@field _characterRepository CharacterRepository
 ---@field _libCrafts LibCrafts
+---@field _craftsByProfession table<string, LcCraft[]>
+---@field _craftsByRecipeId table<number, LcCraft[]>
 CraftRepository = {}
 
 ---@alias CraftSource "Chest" | "Craft" | "Drop" | "Fishing" | "Gift" | "Pickpocketing" | "Quest" | "Trainer" | "Vendor" | "WorldObject" | "Unknown"
@@ -38,6 +40,8 @@ function CraftRepository:Create(database, characterRepository, LibCrafts)
     self._db = database
     self._characterRepository = characterRepository
     self._libCrafts = LibCrafts
+    self._craftsByProfession = {}
+    self._craftsByRecipeId = {}
     return self
 end
 
@@ -45,11 +49,24 @@ end
 local RECIPE_SOURCE_TO_CRAFT_SOURCE = {}
 ---@type table<LcSpellSource, CraftSource>
 local SPELL_SOURCE_TO_CRAFT_SOURCE = {}
+---@type table<LcCraft, CraftSource[]>
+local SOURCES_CACHE = {}
+
+---@param craft LcCraft
+---@return CraftSource[]|nil
+local function cachedSources(craft)
+    return SOURCES_CACHE[craft]
+end
 
 ---@param craft LcCraft
 ---@param LibCrafts LibCrafts
 ---@return CraftSource[]
 local function parseSources(craft, LibCrafts)
+    local cached = cachedSources(craft)
+    if cached ~= nil then
+        return cached
+    end
+
     if next(RECIPE_SOURCE_TO_CRAFT_SOURCE) == nil then
         local RecipeSource = LibCrafts.constants.recipe_sources
         RECIPE_SOURCE_TO_CRAFT_SOURCE[RecipeSource.Chest] = CraftSource.Chest
@@ -92,7 +109,30 @@ local function parseSources(craft, LibCrafts)
     for source, _ in pairs(craftSourcesSet) do
         tinsert(craftSources, source)
     end
+    SOURCES_CACHE[craft] = craftSources
     return craftSources
+end
+
+---@param localizedProfessionName string
+---@return LcCraft[]
+function CraftRepository:GetCraftsByProfession(localizedProfessionName)
+    local crafts = self._craftsByProfession[localizedProfessionName]
+    if crafts == nil then
+        crafts = self._libCrafts:GetCraftsByProfession(localizedProfessionName)
+        self._craftsByProfession[localizedProfessionName] = crafts
+    end
+    return crafts
+end
+
+---@param itemId number
+---@return LcCraft[]
+function CraftRepository:GetCraftsByRecipeId(itemId)
+    local crafts = self._craftsByRecipeId[itemId]
+    if crafts == nil then
+        crafts = self._libCrafts:GetCraftsByRecipeId(itemId)
+        self._craftsByRecipeId[itemId] = crafts
+    end
+    return crafts
 end
 
 ---@param craft LcCraft
@@ -131,22 +171,22 @@ end
 ---@return Craft[]
 function CraftRepository:FindMissing(characterName, localizedProfessionName, searchQuery)
     local professionRank = 0
-    local character = self._characterRepository:Find(characterName)
-    if character ~= nil then
-        professionRank = (--[[---@not nil]] character):GetProfessionRank(localizedProfessionName)
-    end
-
     ---@type table<string, boolean>
     local characterSkillSet = {}
-    for _, skillName in ipairs(self._db:GetLocalizedSkillNames(characterName, localizedProfessionName)) do
-        characterSkillSet[skillName] = true
+    local character = self._characterRepository:Find(characterName)
+    if character ~= nil then
+        local profession = character.professionLocalizedNameToProfession[localizedProfessionName]
+        if profession ~= nil then
+            professionRank = profession.rank
+            characterSkillSet = profession.knownLocalizedSkillNamesSet
+        end
     end
 
     local lcSearchQuery = strlower(searchQuery)
 
     ---@type Craft[]
     local crafts = {}
-    for _, craft in ipairs(self._libCrafts:GetCraftsByProfession(localizedProfessionName)) do
+    for _, craft in ipairs(self:GetCraftsByProfession(localizedProfessionName)) do
         if characterSkillSet[craft.localized_spell_name] == nil then
             local match = false
             if lcSearchQuery ~= "" then
@@ -173,7 +213,7 @@ function CraftRepository:FindByRecipeId(itemId)
 
     ---@type Craft[]
     local crafts = {}
-    for _, craft in ipairs(self._libCrafts:GetCraftsByRecipeId(itemId)) do
+    for _, craft in ipairs(self:GetCraftsByRecipeId(itemId)) do
         local professionRank = 0
         if character ~= nil then
             professionRank = (--[[---@not nil]] character):GetProfessionRank(craft.localized_profession_name)

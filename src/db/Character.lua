@@ -46,23 +46,3 @@ function Character:GetProfessionRank(localizedName)
     end
     return profession.rank
 end
-
----@param craft Craft
----@return boolean
-function Character:Knows(craft)
-    local profession = self.professionLocalizedNameToProfession[craft.localizedProfessionName]
-    if profession == nil then
-        return false
-    end
-    return profession.knownLocalizedSkillNamesSet[craft.localizedName] == true
-end
-
----@param craft Craft
----@return boolean
-function Character:CanLearnNow(craft)
-    local profession = self.professionLocalizedNameToProfession[craft.localizedProfessionName]
-    if profession == nil then
-        return false
-    end
-    return not self:Knows(craft) and profession.rank >= craft.skillLevel
-end

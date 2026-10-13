@@ -58,7 +58,7 @@ function addon:OnEnable()
     local characterRepository = CharacterRepository:Create(self.database)
     ---@type Repositories
     local repositories = {
-        characterRepository = CharacterRepository:Create(self.database),
+        characterRepository = characterRepository,
         professionRepository = ProfessionRepository:Create(LibCraftingProfessions),
         craftRepository = CraftRepository:Create(self.database, characterRepository, LibCrafts)
     }

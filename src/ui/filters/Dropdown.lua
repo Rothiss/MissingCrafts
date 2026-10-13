@@ -56,9 +56,15 @@ function Dropdown:Populate(options, selectedOption)
         data[option] = option
     end
 
-    table.sort(options)
-    self._widget:SetList(data, options)
-    self._widget:SetValue(findOrFirst(options, selectedOption))
+    ---@type string[]
+    local sortedOptions = {}
+    for _, option in ipairs(options) do
+        tinsert(sortedOptions, option)
+    end
+    table.sort(sortedOptions)
+
+    self._widget:SetList(data, sortedOptions)
+    self._widget:SetValue(findOrFirst(sortedOptions, selectedOption))
     self._selectedValue = self._widget:GetValue()
 end
 

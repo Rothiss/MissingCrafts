@@ -2,6 +2,7 @@ setfenv(1, MissingCrafts)
 
 ---@class Database
 ---@field _db DatabaseSavedVariable
+---@field _revision number
 Database = {}
 
 ---@shape DatabaseProfession
@@ -39,14 +40,19 @@ function Database:Create(AceDB)
     }
 
     self._db = --[[---@type DatabaseSavedVariable]] AceDB:New("MissingCraftsDatabase", defaults)
+    self._revision = 0
+    self:_SavePlayer()
 
     return self
 end
 
+---@return number
+function Database:GetRevision()
+    return self._revision
+end
+
 ---@return DatabaseCharacter[]
 function Database:GetCharacters()
-    self:_SavePlayer()
-
     ---@type DatabaseCharacter[]
     local characters = {}
     for _, nameToCharacter in pairs(self._db.global.realmToNameToCharacter) do
@@ -55,20 +61,6 @@ function Database:GetCharacters()
         end
     end
     return characters
-end
-
----@param characterName string
----@param localizedProfessionName string
----@return string[]
-function Database:GetLocalizedSkillNames(characterName, localizedProfessionName)
-    ---@type DatabaseProfession
-    local profession
-    for _, nameToCharacter in pairs(self._db.global.realmToNameToCharacter) do
-        if nameToCharacter[characterName] ~= nil then
-            profession = nameToCharacter[characterName].professionsByLocalizedName[localizedProfessionName]
-        end
-    end
-    return (profession or {}).knownLocalizedSkillNames or {}
 end
 
 ---@param localizedProfessionName string
@@ -80,6 +72,7 @@ function Database:SaveCurrentPlayerSkills(localizedProfessionName, professionRan
         rank = professionRank,
         knownLocalizedSkillNames = localizedSkillNames
     }
+    self._revision = self._revision + 1
 end
 
 ---@param localizedProfessionNames string[]
@@ -96,6 +89,7 @@ function Database:SaveCurrentPlayerProfessions(localizedProfessionNames)
             player.professionsByLocalizedName[localizedProfessionName] = nil
         end
     end
+    self._revision = self._revision + 1
 end
 
 ---@return DatabaseCharacter

@@ -133,15 +133,20 @@ end
 ---@param craft Craft
 ---@return RecipeStatus
 function TooltipEnhancer:GetRecipeStatus(character, craft)
-    if character:Knows(craft) then
+    local profession = character.professionLocalizedNameToProfession[craft.localizedProfessionName]
+    if profession == nil then
+        return RecipeStatus.CannotLearn
+    end
+
+    if profession.knownLocalizedSkillNamesSet[craft.localizedName] == true then
         return RecipeStatus.IsLearned
     end
 
-    if character:CanLearnNow(craft) then
+    if profession.rank >= craft.skillLevel then
         return RecipeStatus.CanLearnNow
     end
 
-    if character:GetProfessionRank(craft.localizedProfessionName) > 0 then
+    if profession.rank > 0 then
         return RecipeStatus.CanLearnLater
     end
 

@@ -6,7 +6,16 @@ setfenv(1, MissingCrafts)
 ---@field _scrollFrame AceGUIScrollFrame
 ---@field _buttonsGroup AceGUISimpleGroup
 ---@field _items CraftsListItem[]
+---@field _onItemClick fun(clickedItem: CraftsListItem): void
 CraftsList = {}
+
+---@param self CraftsList
+---@param clickedItem CraftsListItem
+local function setHighlightedItem(self, clickedItem)
+    for _, otherItem in ipairs(self._items) do
+        otherItem:SetHighlight(otherItem == clickedItem)
+    end
+end
 
 ---@param locale MissingCraftsLocale
 ---@param AceGUI LibAceGUI
@@ -29,6 +38,7 @@ function CraftsList:Create(locale, vanillaFramePool, AceGUI)
     list._scrollFrame = scrollFrame
     list._buttonsGroup = buttonsGroup
     list._items = {}
+    list._onItemClick = function(clickedItem) setHighlightedItem(list, clickedItem) end
     return list
 end
 
@@ -56,13 +66,6 @@ end
 function CraftsList:PopulateInterface(crafts)
     table.sort(crafts, compareCrafts)
 
-    ---@param clickedItem CraftsListItem
-    local highlightItem = function(clickedItem)
-        for _, otherItem in ipairs(self._items) do
-            otherItem:SetHighlight(otherItem == clickedItem)
-        end
-    end
-
     local buttonsGroup = --[[---@not nil]] self._buttonsGroup
     ---@type Frame
     local anchor = buttonsGroup.frame
@@ -73,7 +76,7 @@ function CraftsList:PopulateInterface(crafts)
             tinsert(self._items, item)
         end
         item:SetHighlight(false)
-        item:OnClick(highlightItem)
+        item:OnClick(self._onItemClick)
         item:Attach(buttonsGroup.frame, anchor, "TOPLEFT", i == 1 and "TOPLEFT" or "BOTTOMLEFT", 0, 0)
         item:PopulateInterface(craft)
         anchor = item:GetFrame()
