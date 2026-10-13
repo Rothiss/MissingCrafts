@@ -11,7 +11,7 @@ A World of Warcraft addon for Vanilla WoW (1.12.1) and Turtle WoW that helps pla
 - **Recipe Source Information**: Displays how to obtain each missing recipe (Vendor, Quest, Drop, etc.)
 - **Multiple Profession Frame Support**: Works seamlessly with default WoW frames and popular profession addons
 - **All Vanilla Crafting Professions**: Supports all vanilla crafting professions
-- **Turtle WoW Support**: Full support for all Turtle WoW custom recipes including the complete Jewelcrafting profession with English, Portuguese, Spanish, and Chinese language support
+- **Turtle WoW Support**: Full support for all Turtle WoW custom recipes including the complete Jewelcrafting profession and the Survival profession with English, Portuguese, Spanish, and Chinese language support
 - **Multi-Language Support**: Available in English, German, French, Spanish, Portuguese, Russian, Korean, Chinese (Simplified), and Chinese (Traditional)
 
 ## How to Use
