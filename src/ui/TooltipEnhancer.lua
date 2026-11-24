@@ -45,6 +45,9 @@ end
 ---@param itemId number
 ---@return boolean
 function TooltipEnhancer:EnhanceTooltip(tooltip, itemId)
+    if itemId == nil then
+        return false
+    end
     local items = self:CreateItems(itemId)
     items = self:FilterItems(items)
     if getn(items) == 0 then
